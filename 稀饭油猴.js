@@ -4,7 +4,7 @@
 // @version      1.0
 // @description  提取动态加载的视频链接并通过美化后的GUI按钮进行跳转，窗口可缩放，显示链接详情
 // @author       CMB
-// @match        https://dick.xfani.com/watch/*.html
+// @match        https://dick.xfani.com/watch/*
 // @grant        none
 // ==/UserScript==
 
@@ -17,22 +17,20 @@
     // 每秒检查一次
     const intervalId = setInterval(() => {
         const scriptElement = document.querySelector('script[type="text/javascript"]');
-        if (scriptElement &&!isVideoUrlFound) {
-            const scriptText = scriptElement.textContent;
-            const jsonStartIndex = scriptText.indexOf('{');
-            const jsonEndIndex = scriptText.lastIndexOf('}');
-            if (jsonStartIndex!== -1 && jsonEndIndex!== -1) {
-                const jsonData = scriptText.substring(jsonStartIndex, jsonEndIndex + 1);
-                const playerData = JSON.parse(jsonData);
-                videoUrl = playerData.url;
-                console.log(videoUrl);
+        const scriptText = scriptElement.textContent;
+        const match = scriptText.match(/"url":"([^"]+)"/);
+        if (match && match[1]) {
+            const videoUrl = decodeURIComponent(match[1]);
+            const url=videoUrl.replace(/\\\//g, '/');
+            console.log(url);
+            isVideoUrlFound = true;
+            clearInterval(url);
 
-                isVideoUrlFound = true;
-                clearInterval(intervalId);
+            // 创建GUI界面元素
+            createDownloadUI(url);
+        } else {
+            console.log('未匹配到视频链接');
 
-                // 创建GUI界面元素
-                createDownloadUI(videoUrl);
-            }
         }
     }, 1000);
 
